@@ -1,10 +1,12 @@
 
-export enum ChainNetwork {
-  ETHEREUM = 'Ethereum',
-  POLYGON = 'Polygon',
-  BNB_CHAIN = 'BSC',
-  ARBITRUM = 'Arbitrum'
-}
+export const ChainNetwork = {
+  ETHEREUM: 'Ethereum',
+  POLYGON: 'Polygon',
+  BNB_CHAIN: 'BSC',
+  ARBITRUM: 'Arbitrum'
+} as const;
+
+export type ChainNetwork = typeof ChainNetwork[keyof typeof ChainNetwork];
 
 export type KYCStatus = 'pending' | 'approved' | 'rejected' | 'NOT_STARTED';
 export type FiatCurrency = 'BRL' | 'USD' | 'PYG';

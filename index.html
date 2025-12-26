@@ -13,6 +13,10 @@
       background-color: #0a0a0c;
       color: #f8fafc;
       overflow: hidden;
+      margin: 0;
+    }
+    #root {
+      min-height: 100vh;
     }
     .code-font {
       font-family: 'Fira Code', monospace;
@@ -36,8 +40,10 @@
     }
   </style>
   <script>
+    // Robust Process Shim for Browser
     window.process = { 
       env: { 
+        NODE_ENV: 'production',
         API_KEY: '',
         NEXT_PUBLIC_SUPABASE_URL: 'https://gaicobzoqtsevxqiyvdo.supabase.co',
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: 'sb_publishable_ZGVxDMP8poHHD3tMbX1uHQ_Q-iMjhxO',
@@ -45,6 +51,12 @@
         NEXT_PUBLIC_CHAIN_ID: '137',
         NEXT_PUBLIC_AMM_ADDRESS: '0x12c8b746830c239828109847102938471029384b'
       } 
+    };
+
+    // Global Error Logger for Vercel Debugging
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+      console.error('GLOBAL_ERROR:', msg, 'at', url, ':', lineNo);
+      return false;
     };
   </script>
 <script type="importmap">

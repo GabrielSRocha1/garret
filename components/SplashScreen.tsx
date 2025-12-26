@@ -10,17 +10,18 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
+    // Garantir que os passos ocorram mesmo se o navegador atrasar o frame inicial
     const timers = [
-      setTimeout(() => setStep(1), 1000),
-      setTimeout(() => setStep(2), 2200),
-      setTimeout(() => onComplete(), 3500)
+      setTimeout(() => setStep(1), 100), // Aparece quase instantaneamente
+      setTimeout(() => setStep(2), 1500),
+      setTimeout(() => onComplete(), 3000)
     ];
     return () => timers.forEach(t => clearTimeout(t));
   }, [onComplete]);
 
   return (
     <div className="fixed inset-0 bg-[#0a0a0c] z-[100] flex flex-col items-center justify-center">
-      <div className={`transition-all duration-1000 transform ${step >= 1 ? 'scale-110 opacity-100' : 'scale-50 opacity-0'}`}>
+      <div className={`transition-all duration-1000 transform ${step >= 1 ? 'scale-100 opacity-100' : 'scale-90 opacity-0'}`}>
         <div className="w-24 h-24 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-[32px] flex items-center justify-center shadow-2xl shadow-cyan-500/40 relative">
           <Lock className="text-white" size={40} />
           {step >= 2 && (
@@ -37,7 +38,15 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
       </div>
 
       <div className="absolute bottom-12 w-48 h-1 bg-slate-900 rounded-full overflow-hidden">
-        <div className="h-full bg-cyan-500 transition-all duration-[3000ms] ease-out" style={{ width: step >= 2 ? '100%' : '20%' }}></div>
+        <div 
+          className="h-full bg-cyan-500 transition-all duration-[2500ms] ease-out" 
+          style={{ width: step >= 2 ? '100%' : '10%' }}
+        ></div>
+      </div>
+      
+      {/* Texto de debug discreto caso algo trave */}
+      <div className="absolute bottom-4 text-[8px] text-slate-800 uppercase font-black">
+        Initializing Secure Environment...
       </div>
     </div>
   );

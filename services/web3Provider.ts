@@ -1,3 +1,4 @@
+
 import { ethers } from 'ethers';
 import { ChainNetwork } from '../types.ts';
 
@@ -5,22 +6,19 @@ class Web3ProviderService {
   private provider: ethers.BrowserProvider | null = null;
   private signer: ethers.JsonRpcSigner | null = null;
 
-  // Getter para verificar se estamos em modo de simulação institucional
   private get isPreDeployMode(): boolean {
-    return (window as any).process?.env?.NEXT_PUBLIC_WEB3_MODE === "predeploy";
+    const env = (window as any).process?.env;
+    return env?.NEXT_PUBLIC_WEB3_MODE === "predeploy";
   }
 
-  // No modo predeploy, consideramos "instalado" para habilitar o fluxo de demonstração
   public isInstalled(): boolean {
     if (this.isPreDeployMode) return true;
     return typeof window !== 'undefined' && !!(window as any).ethereum;
   }
 
-  // Getter seguro para o objeto ethereum
   private get ethereum() {
     const eth = (window as any).ethereum;
     if (!eth) {
-      // Se não houver ethereum e NÃO for predeploy, lançamos erro
       if (!this.isPreDeployMode) {
         throw new Error("METAMASK_NOT_INSTALLED");
       }
@@ -30,7 +28,6 @@ class Web3ProviderService {
   }
 
   async connect(): Promise<{ address: string; chainId: bigint }> {
-    // Caso 1: Modo Simulação e sem MetaMask instalada
     if (this.isPreDeployMode && !(window as any).ethereum) {
       await new Promise(resolve => setTimeout(resolve, 1200));
       return { 
@@ -39,7 +36,6 @@ class Web3ProviderService {
       };
     }
 
-    // Caso 2: Conexão real (tentamos mesmo no predeploy se a carteira existir)
     try {
       const eth = this.ethereum;
       if (!eth) throw new Error("METAMASK_NOT_INSTALLED");
@@ -61,7 +57,6 @@ class Web3ProviderService {
   }
 
   async signAuthMessage(nonce: string): Promise<string> {
-    // Se estiver em simulação e sem signer real, retorna assinatura mock
     if (this.isPreDeployMode && !this.signer) {
         return "0x_mock_signature_" + Math.random().toString(16).slice(2);
     }
@@ -119,7 +114,7 @@ class Web3ProviderService {
   async getRecentTransactions(address: string): Promise<string[]> {
     await new Promise(resolve => setTimeout(resolve, 800));
     return [
-      "0x7c4e23194a218f7d92109847120938471029384710293847102938471029384a",
+      "0x7c4e23194a218f7d92109847102938471029384710293847102938471029384a",
       "0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z1a2b3c4d5e6f",
       "0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba",
       "0x6b29384710293847102938471029384710293847102938471029384710293842"
