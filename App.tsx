@@ -32,6 +32,7 @@ import SupportView from './components/SupportView.tsx';
 import InfrastructureView from './components/InfrastructureView.tsx';
 import DatabaseView from './components/DatabaseView.tsx';
 import EnvView from './components/EnvView.tsx';
+import AuthView from './components/AuthView.tsx';
 import { ChainNetwork, ViewState, UserProfile } from './types.ts';
 
 const App: React.FC = () => {
@@ -47,13 +48,15 @@ const App: React.FC = () => {
   useEffect(() => {
     if (walletInfo) {
       web3Service.listenToEvents(
-        (newAddr) => console.log("Conta alterada:", newAddr),
+        (newAddr) => {
+          setWalletInfo(prev => prev ? { ...prev, address: newAddr } : null);
+        },
         (newChain) => console.log("Rede alterada:", newChain)
       );
     }
   }, [walletInfo]);
 
-  const handleConnect = async () => {
+  const handleWalletConnect = async () => {
     if (!isInstalled && !isPreDeploy) {
       window.open('https://metamask.io/download/', '_blank');
       return;
@@ -78,6 +81,11 @@ const App: React.FC = () => {
     }
   };
 
+  const handleAuthSuccess = (user: UserProfile) => {
+    setCurrentUser(user);
+    setActiveTab('dashboard');
+  };
+
   const handleLogout = () => {
     backendApi.logout();
     setCurrentUser(null);
@@ -91,43 +99,11 @@ const App: React.FC = () => {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-[#0d0d0f] border border-slate-800/50 rounded-[40px] p-12 text-center shadow-2xl">
-          <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-[32px] flex items-center justify-center mx-auto mb-8 shadow-xl shadow-cyan-500/20">
-            <Lock className="text-white" size={32} />
-          </div>
-          <h1 className="text-3xl font-black text-white mb-2 tracking-tighter">SECURE ACCESS</h1>
-          <p className="text-slate-500 text-sm mb-10 font-medium">Garrett Institutional Wealth Management</p>
-          
-          {error && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-500 text-xs font-bold uppercase">
-              <ShieldAlert size={18} /> {error}
-            </div>
-          )}
-
-          <button 
-            onClick={handleConnect}
-            disabled={isConnecting}
-            className="w-full py-4 bg-cyan-500 hover:bg-cyan-400 disabled:bg-slate-800 disabled:text-slate-500 text-[#0a0a0c] rounded-[24px] font-black transition-all shadow-xl shadow-cyan-500/20 flex items-center justify-center gap-3 group"
-          >
-            {isConnecting ? (
-              <>
-                <Loader2 size={20} className="animate-spin" />
-                Sincronizando Wallet...
-              </>
-            ) : (
-              <>
-                <Wallet size={20} className="group-hover:rotate-12 transition-transform" />
-                Conectar Institutional Wallet
-              </>
-            )}
-          </button>
-          
-          <p className="mt-8 text-[10px] text-slate-600 uppercase font-black tracking-[0.2em] flex items-center justify-center gap-2">
-            <ShieldCheck size={12} className="text-emerald-500" /> AES-256 E2EE Protected
-          </p>
-        </div>
-      </div>
+      <AuthView 
+        onSuccess={handleAuthSuccess} 
+        onWalletConnect={handleWalletConnect}
+        isConnecting={isConnecting}
+      />
     );
   }
 
@@ -152,14 +128,14 @@ const App: React.FC = () => {
                     <button className="p-3 bg-slate-800 hover:bg-slate-700 rounded-2xl text-white transition-all"><ArrowUpRight size={20} /></button>
                     <button 
                       onClick={() => setActiveTab('swap')} 
-                      disabled={isPreDeploy}
+                      disabled={isPreDeploy && !walletInfo}
                       className={`p-3 rounded-2xl transition-all shadow-xl flex items-center justify-center gap-2 group active:scale-95 ${
-                        isPreDeploy 
+                        isPreDeploy && !walletInfo
                           ? 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none' 
                           : 'bg-cyan-500 hover:bg-cyan-400 text-[#0a0a0c] shadow-cyan-500/20'
                       }`}
                     >
-                      {isPreDeploy ? <Lock size={20} /> : <Repeat size={20} />}
+                      {isPreDeploy && !walletInfo ? <Lock size={20} /> : <Repeat size={20} />}
                     </button>
                   </div>
                 </div>
@@ -191,7 +167,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   <div className="h-full">
-                    <BlockchainExplorer address={walletInfo?.address || ''} />
+                    <BlockchainExplorer address={walletInfo?.address || '0x...'} />
                   </div>
                 </div>
               </div>
@@ -226,7 +202,7 @@ const App: React.FC = () => {
             </div>
           </div>
         );
-      case 'wallet': return <BlockchainExplorer address={walletInfo?.address || ''} />;
+      case 'wallet': return <BlockchainExplorer address={walletInfo?.address || '0x...'} />;
       case 'swap': return <SwapView />;
       case 'pools': return <PoolsView />;
       case 'infrastructure': return <InfrastructureView />;
@@ -268,8 +244,8 @@ const App: React.FC = () => {
         </div>
         <div className="flex items-center gap-4">
           <div className="hidden md:flex bg-slate-900/50 border border-slate-800 rounded-2xl px-4 py-2 items-center gap-3 font-mono text-[10px]">
-             <span className="text-slate-400">{walletInfo?.address.slice(0, 6)}...{walletInfo?.address.slice(-4)}</span>
-             <span className="text-cyan-500 uppercase font-black">{walletInfo?.chain}</span>
+             <span className="text-slate-400">{walletInfo?.address ? `${walletInfo.address.slice(0, 6)}...${walletInfo.address.slice(-4)}` : currentUser.email}</span>
+             {walletInfo && <span className="text-cyan-500 uppercase font-black">{walletInfo.chain}</span>}
           </div>
           <button onClick={() => setActiveTab('settings')} className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400"><Menu size={20} /></button>
         </div>
