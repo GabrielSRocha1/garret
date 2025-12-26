@@ -1,130 +1,154 @@
 
-import React from 'react';
-import { Server, ShieldCheck, CreditCard, Activity, Database, Bell, Zap, Globe, Lock } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Server, ShieldCheck, CreditCard, Activity, Database, Bell, Zap, Globe, Lock, Cpu, ArrowRight, Layers, Layout, Code2, Link, Binary } from 'lucide-react';
+import { web3Service } from '../services/web3Provider.ts';
 
-const API_STACK = [
+const SYSTEM_STACK = [
   { 
-    name: 'Sumsub', 
-    category: 'KYC / AML', 
-    status: 'Connected', 
-    latency: '124ms', 
-    icon: ShieldCheck, 
-    color: 'text-emerald-500',
-    description: 'Verificação de identidade e monitoramento de sanções em tempo real.'
+    id: 'frontend', 
+    name: 'Frontend', 
+    tech: 'React / Next.js', 
+    icon: Layout, 
+    color: 'text-blue-500', 
+    desc: 'Interface institucional reativa com UX de alta performance e Sentinel Widgets.' 
   },
   { 
-    name: 'Fireblocks', 
-    category: 'Custody / MPC', 
-    status: 'Connected', 
-    latency: '45ms', 
-    icon: Lock, 
-    color: 'text-cyan-500',
-    description: 'Gestão de ativos via Multi-Party Computation e governança de cofre.'
+    id: 'backend', 
+    name: 'Backend API', 
+    tech: 'Node.js + NestJS', 
+    icon: Server, 
+    color: 'text-indigo-500', 
+    desc: 'Orquestração de lógica de negócios, autenticação segura e gateway de banco de dados.' 
   },
   { 
-    name: 'Transak', 
-    category: 'Fiat Ramp', 
-    status: 'Active', 
-    latency: '210ms', 
-    icon: CreditCard, 
-    color: 'text-amber-500',
-    description: 'Conversão Fiat-to-Crypto via PIX, Débito e Transferência Bancária.'
+    id: 'web3', 
+    name: 'Web3 Layer', 
+    tech: 'Ethers.js v6', 
+    icon: Binary, 
+    color: 'text-purple-500', 
+    desc: 'Abstração de provedores RPC e integração com wallets via BrowserProvider.' 
   },
   { 
-    name: 'Chainlink', 
-    category: 'Price Oracles', 
-    status: 'Synced', 
-    latency: '12ms', 
-    icon: Activity, 
-    color: 'text-blue-500',
-    description: 'Feeds de preço descentralizados e prova de reservas.'
+    id: 'contracts', 
+    name: 'Smart Contracts', 
+    tech: 'Solidity / EVM', 
+    icon: Code2, 
+    color: 'text-emerald-500', 
+    desc: 'Lógica on-chain de AMM, Compliance Registry e Guardrails de liquidez.' 
   },
   { 
-    name: 'The Graph', 
-    category: 'Data Indexing', 
-    status: 'Healthy', 
-    latency: '8ms', 
+    id: 'chain', 
+    name: 'Blockchain', 
+    tech: 'L1/L2 Settlement', 
     icon: Database, 
-    color: 'text-purple-500',
-    description: 'Indexação de eventos on-chain para analytics de alta performance.'
-  },
-  { 
-    name: 'OneSignal', 
-    category: 'Notifications', 
-    status: 'Connected', 
-    latency: '30ms', 
-    icon: Bell, 
-    color: 'text-red-500',
-    description: 'Push dinâmico e alertas de transações críticas via Web/Mobile.'
+    color: 'text-amber-500', 
+    desc: 'Liquidação final em rede imutável (Ethereum, Polygon ou BNB Chain).' 
   }
 ];
 
 const InfrastructureView: React.FC = () => {
+  const [telemetry, setTelemetry] = useState({ blockNumber: 0, gasPrice: '0', latency: 0 });
+
+  useEffect(() => {
+    const sync = async () => {
+      const status = await web3Service.getNetworkStatus();
+      setTelemetry(status);
+    };
+    sync();
+    const interval = setInterval(sync, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-700">
-      <div className="flex items-center justify-between">
+    <div className="max-w-6xl mx-auto space-y-16 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-800/50 pb-8">
         <div>
-          <h2 className="text-3xl font-black text-white tracking-tighter uppercase italic">System Architecture</h2>
-          <p className="text-slate-500 text-sm mt-1">Status operacional da camada de infraestrutura institucional.</p>
+          <h2 className="text-4xl font-black text-white tracking-tighter uppercase italic flex items-center gap-4">
+            <Cpu className="text-cyan-500" size={36} />
+            Institutional Stack
+          </h2>
+          <p className="text-slate-500 text-sm mt-1">Arquitetura fim-a-fim da infraestrutura Garrett Wealth.</p>
         </div>
-        <div className="flex gap-4">
-          <div className="bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-xl flex items-center gap-3">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Global Systems Nominal</span>
+        <div className="flex items-center gap-4 bg-slate-900/50 p-4 rounded-3xl border border-slate-800">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+            <span className="text-[10px] font-black text-slate-500 uppercase">System Integrity: Nominal</span>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {API_STACK.map((api) => (
-          <div key={api.name} className="bg-[#0d0d0f] border border-slate-800/50 rounded-[32px] p-8 hover:border-slate-700 transition-all group">
-            <div className="flex justify-between items-start mb-6">
-              <div className={`p-4 rounded-2xl bg-slate-900 border border-slate-800 ${api.color}`}>
-                <api.icon size={24} />
-              </div>
-              <div className="text-right">
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 block mb-1">Status</span>
-                <span className="text-xs font-bold text-white">{api.status}</span>
+      {/* Vertical Stack Flow */}
+      <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="lg:col-span-8 space-y-4">
+          {SYSTEM_STACK.map((layer, index) => (
+            <div key={layer.id} className="relative">
+              <div className="flex items-center gap-8 group">
+                {/* Visual Connector Line */}
+                <div className="flex flex-col items-center">
+                  <div className={`w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center shadow-inner transition-all group-hover:border-slate-500 ${layer.color}`}>
+                    <layer.icon size={24} />
+                  </div>
+                  {index < SYSTEM_STACK.length - 1 && (
+                    <div className="w-0.5 h-12 bg-gradient-to-b from-slate-800 to-transparent my-1"></div>
+                  )}
+                </div>
+
+                <div className="flex-1 bg-[#0d0d0f] border border-slate-800/50 p-6 rounded-[32px] hover:border-slate-700 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="text-lg font-black text-white uppercase tracking-tight italic">{layer.name}</h3>
+                      <span className="text-[9px] font-black uppercase text-slate-600 tracking-widest bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-800">
+                        {layer.tech}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 font-medium max-w-lg leading-relaxed">{layer.desc}</p>
+                  </div>
+                  <div className="hidden md:flex flex-col items-end">
+                    <span className="text-[9px] font-black text-slate-700 uppercase mb-1">Status</span>
+                    <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Connected</span>
+                  </div>
+                </div>
               </div>
             </div>
-            
-            <h3 className="text-xl font-bold text-white mb-1">{api.name}</h3>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">{api.category}</p>
-            <p className="text-sm text-slate-400 leading-relaxed mb-6 h-12 overflow-hidden">{api.description}</p>
-            
-            <div className="flex items-center justify-between pt-6 border-t border-slate-800/50">
-              <div className="flex items-center gap-2">
-                <Zap size={12} className="text-cyan-500" />
-                <span className="text-[10px] font-bold text-slate-500 uppercase">Latency</span>
+          ))}
+        </div>
+
+        {/* Real-time Telemetry Panel */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="bg-[#0d0d0f] border border-cyan-500/20 rounded-[40px] p-8 shadow-2xl shadow-cyan-500/5">
+            <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
+              <Activity size={16} className="text-cyan-500" /> RPC Telemetry
+            </h3>
+            <div className="space-y-8">
+              <div>
+                <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Confirmed Blocks</p>
+                <p className="text-3xl font-black text-white italic">#{telemetry.blockNumber}</p>
+                <div className="h-1 w-full bg-slate-900 rounded-full mt-2 overflow-hidden">
+                  <div className="h-full bg-cyan-500 w-[70%] animate-pulse"></div>
+                </div>
               </div>
-              <span className="text-[10px] font-mono font-bold text-emerald-400">{api.latency}</span>
+              <div>
+                <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Engine Latency</p>
+                <p className="text-3xl font-black text-emerald-500 italic">{telemetry.latency}ms</p>
+                <p className="text-[9px] text-slate-700 uppercase font-black mt-1">Read-Provider Response</p>
+              </div>
+              <div className="pt-8 border-t border-slate-800/50">
+                <div className="flex justify-between items-center p-4 bg-slate-900/50 rounded-2xl border border-slate-800">
+                  <div className="flex items-center gap-3">
+                    <Globe size={18} className="text-purple-500" />
+                    <span className="text-[10px] font-black text-white uppercase">Mainnet Node</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-500">Polygon</span>
+                </div>
+              </div>
             </div>
           </div>
-        ))}
-      </div>
 
-      <div className="bg-gradient-to-r from-cyan-600/5 to-blue-600/5 border border-cyan-500/20 rounded-[40px] p-10 mt-12">
-        <div className="flex flex-col md:flex-row gap-10 items-center">
-          <div className="flex-1 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500 text-[#0a0a0c] rounded-full text-[9px] font-black uppercase tracking-widest">
-              VASP Compliance
-            </div>
-            <h3 className="text-2xl font-bold text-white tracking-tight leading-none">Certificações & Governança</h3>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-xl">
-              A arquitetura Garrett segue as diretrizes da <strong>FATF Travel Rule</strong> e auditorias <strong>SOC2 Type II</strong>. Todos os ativos são segregados e custodiados em ambientes isolados com backup geográfico.
+          <div className="bg-slate-900/30 p-8 rounded-[32px] border border-slate-800/50 flex items-start gap-4">
+            <ShieldCheck className="text-emerald-500 shrink-0" size={24} />
+            <p className="text-xs text-slate-500 leading-relaxed">
+              O backend Garrett monitora constantemente o estado da blockchain via <strong>readProvider</strong>, garantindo que os dados do dashboard estejam sempre sincronizados, independente da conexão da wallet.
             </p>
-          </div>
-          <div className="flex gap-4">
-            <div className="p-6 bg-[#0a0a0c] border border-slate-800 rounded-3xl text-center min-w-[140px]">
-              <Globe className="text-slate-500 mx-auto mb-3" size={32} />
-              <p className="text-[10px] font-black text-slate-400 uppercase">SLA</p>
-              <p className="text-lg font-black text-white">99.99%</p>
-            </div>
-            <div className="p-6 bg-[#0a0a0c] border border-slate-800 rounded-3xl text-center min-w-[140px]">
-              <Activity className="text-slate-500 mx-auto mb-3" size={32} />
-              <p className="text-[10px] font-black text-slate-400 uppercase">Uptime</p>
-              <p className="text-lg font-black text-white">453d</p>
-            </div>
           </div>
         </div>
       </div>
