@@ -1,0 +1,7 @@
+{
+  "name": "Garrett Web3 Fintech",
+  "description": "Plataforma financeira de próxima geração: Abstração de conta, auditoria de ativos via IA e gestão de patrimônio multi-chain.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
