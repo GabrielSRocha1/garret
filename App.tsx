@@ -21,7 +21,6 @@ import SplashScreen from './components/SplashScreen.tsx';
 import AuthView from './components/AuthView.tsx';
 import { ChainNetwork, ViewState, UserProfile } from './types.ts';
 
-// Lazy Loading de componentes pesados para otimização de bundle
 const ContractEditor = lazy(() => import('./components/ContractEditor.tsx'));
 const BlockchainExplorer = lazy(() => import('./components/BlockchainExplorer.tsx'));
 const SwapView = lazy(() => import('./components/SwapView.tsx'));
@@ -38,7 +37,7 @@ const ViewLoader = () => (
       <Loader2 className="animate-spin text-cyan-500" size={40} />
       <div className="absolute inset-0 blur-xl bg-cyan-500/20 animate-pulse"></div>
     </div>
-    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Decrypting View Data...</p>
+    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Decrypting On-Chain Data...</p>
   </div>
 );
 
@@ -49,7 +48,6 @@ const App: React.FC = () => {
   const [walletInfo, setWalletInfo] = useState<{ address: string; chain: ChainNetwork } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const isPreDeploy = (window as any).process?.env?.NEXT_PUBLIC_WEB3_MODE === 'predeploy';
   const isInstalled = web3Service.isInstalled();
 
   useEffect(() => {
@@ -58,13 +56,16 @@ const App: React.FC = () => {
         (newAddr) => {
           setWalletInfo(prev => prev ? { ...prev, address: newAddr } : null);
         },
-        (newChain) => console.log("Rede alterada:", newChain)
+        (newChain) => {
+          const name = web3Service.getNetworkName(BigInt(newChain));
+          setWalletInfo(prev => prev ? { ...prev, chain: name } : null);
+        }
       );
     }
   }, [walletInfo]);
 
   const handleWalletConnect = async () => {
-    if (!isInstalled && !isPreDeploy) {
+    if (!isInstalled) {
       window.open('https://metamask.io/download/', '_blank');
       return;
     }
@@ -74,7 +75,12 @@ const App: React.FC = () => {
     try {
       const { address, chainId } = await web3Service.connect();
       const networkName = web3Service.getNetworkName(chainId);
-      const signature = await web3Service.signAuthMessage("GARRETT_AUTH_SESSION_" + Date.now());
+      
+      // Assinatura REAL obrigatória para login
+      const nonce = `GARRETT_${Date.now()}`;
+      const signature = await web3Service.signAuthMessage(nonce);
+      
+      // Autenticação vinculada à wallet real
       const user = await backendApi.authenticate(address, signature);
       
       setCurrentUser(user);
@@ -82,7 +88,7 @@ const App: React.FC = () => {
       setActiveTab('dashboard');
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Falha na conexão.");
+      setError(err.message || "Wallet connection failed.");
     } finally {
       setIsConnecting(false);
     }
@@ -126,57 +132,43 @@ const App: React.FC = () => {
                     <div className="md:col-span-3 space-y-8">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h2 className="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Total Balance</h2>
+                          <h2 className="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Live Portfolio</h2>
                           <div className="flex items-baseline gap-3">
-                            <span className="text-5xl font-black text-white tracking-tighter">$1,248,592.40</span>
+                            <span className="text-5xl font-black text-white tracking-tighter">
+                              {walletInfo ? "Connected" : "$0.00"}
+                            </span>
                             <span className="text-emerald-500 font-bold text-sm bg-emerald-500/10 px-2 py-0.5 rounded-lg flex items-center gap-1">
-                              <TrendingUp size={14} /> +4.2%
+                              <TrendingUp size={14} /> On-Chain
                             </span>
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button className="p-3 bg-slate-800 hover:bg-slate-700 rounded-2xl text-white transition-all"><ArrowUpRight size={20} /></button>
-                          <button 
-                            onClick={() => setActiveTab('swap')} 
-                            disabled={isPreDeploy && !walletInfo}
-                            className={`p-3 rounded-2xl transition-all shadow-xl flex items-center justify-center gap-2 group active:scale-95 ${
-                              isPreDeploy && !walletInfo
-                                ? 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none' 
-                                : 'bg-cyan-500 hover:bg-cyan-400 text-[#0a0a0c] shadow-cyan-500/20'
-                            }`}
-                          >
-                            {isPreDeploy && !walletInfo ? <Lock size={20} /> : <Repeat size={20} />}
+                          <button onClick={() => setActiveTab('swap')} className="p-4 bg-cyan-500 hover:bg-cyan-400 text-[#0a0a0c] rounded-2xl transition-all shadow-xl shadow-cyan-500/20 flex items-center gap-3 font-black text-xs uppercase tracking-widest">
+                            <Repeat size={18} /> Instant Swap
                           </button>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="bg-[#0d0d0f] rounded-[32px] border border-slate-800/50 p-6">
-                          <div className="flex items-center justify-between mb-6">
+                        <div className="bg-[#0d0d0f] rounded-[32px] border border-slate-800/50 p-8">
+                          <div className="flex items-center justify-between mb-8">
                             <h3 className="font-bold text-white flex items-center gap-2 italic uppercase text-xs tracking-widest">
-                              <Cpu className="text-cyan-500" size={16} /> Asset Allocation
+                              <Cpu className="text-cyan-500" size={16} /> Asset Verification
                             </h3>
                           </div>
-                          <div className="space-y-4">
-                            {[
-                              { name: 'Ethereum', symbol: 'ETH', color: 'bg-blue-500', pct: 65, val: '$811,585.06' },
-                              { name: 'USD Coin', symbol: 'USDC', color: 'bg-cyan-500', pct: 25, val: '$312,148.10' },
-                              { name: 'Polygon', symbol: 'POL', color: 'bg-purple-500', pct: 10, val: '$124,859.24' },
-                            ].map((asset) => (
-                              <div key={asset.symbol}>
-                                <div className="flex justify-between text-xs mb-2">
-                                  <span className="text-slate-200 font-bold">{asset.name}</span>
-                                  <span className="text-slate-400">{asset.val}</span>
-                                </div>
-                                <div className="h-1.5 w-full bg-slate-800/50 rounded-full overflow-hidden">
-                                  <div className={`h-full ${asset.color} transition-all duration-1000`} style={{ width: `${asset.pct}%` }}></div>
-                                </div>
-                              </div>
-                            ))}
+                          <div className="space-y-6">
+                            <div className="p-4 bg-slate-900/50 border border-slate-800 rounded-2xl">
+                              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Native Balance</p>
+                              <p className="text-xl font-bold text-white">{walletInfo?.address ? 'Querying...' : 'N/A'}</p>
+                            </div>
+                            <div className="p-4 bg-slate-900/50 border border-slate-800 rounded-2xl">
+                              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Network Identity</p>
+                              <p className="text-xl font-bold text-cyan-500 uppercase">{walletInfo?.chain || 'Unknown'}</p>
+                            </div>
                           </div>
                         </div>
                         <div className="h-full">
-                          <BlockchainExplorer address={walletInfo?.address || '0x...'} />
+                          <BlockchainExplorer address={walletInfo?.address || ''} />
                         </div>
                       </div>
                     </div>
@@ -184,7 +176,7 @@ const App: React.FC = () => {
                     <div className="space-y-6">
                       <div className="bg-gradient-to-br from-[#0d0d0f] to-[#16161a] p-8 rounded-[40px] border border-slate-800/50 shadow-xl">
                         <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                          <ShieldCheck size={14} className="text-emerald-500" /> Wealth Security
+                          <ShieldCheck size={14} className="text-emerald-500" /> Wallet Health
                         </h3>
                         <div className="space-y-6">
                           <div className="flex gap-4 items-start">
@@ -192,17 +184,8 @@ const App: React.FC = () => {
                               <Lock size={20} />
                             </div>
                             <div>
-                              <p className="text-sm font-bold text-white">MPC Custody</p>
-                              <p className="text-[10px] text-slate-500 uppercase font-black">Fireblocks V3 Active</p>
-                            </div>
-                          </div>
-                          <div className="flex gap-4 items-start">
-                            <div className="p-3 bg-cyan-500/10 text-cyan-500 rounded-2xl">
-                              <ShieldCheck size={20} />
-                            </div>
-                            <div>
-                              <p className="text-sm font-bold text-white">Real-time AML</p>
-                              <p className="text-[10px] text-slate-500 uppercase font-black">Sumsub Monitoring</p>
+                              <p className="text-sm font-bold text-white">Active Session</p>
+                              <p className="text-[10px] text-slate-500 uppercase font-black">Signature Verified</p>
                             </div>
                           </div>
                         </div>
@@ -211,7 +194,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
               );
-            case 'wallet': return <BlockchainExplorer address={walletInfo?.address || '0x...'} />;
+            case 'wallet': return <BlockchainExplorer address={walletInfo?.address || ''} />;
             case 'swap': return <SwapView />;
             case 'pools': return <PoolsView />;
             case 'infrastructure': return <InfrastructureView />;
@@ -220,7 +203,7 @@ const App: React.FC = () => {
             case 'env': return <EnvView />;
             case 'settings': return <SettingsView onLogout={handleLogout} />;
             case 'support': return <SupportView />;
-            default: return <div className="text-white">Under Development.</div>;
+            default: return <div className="text-white text-center py-20 uppercase font-black tracking-widest">View Not Linked</div>;
           }
         })()}
       </Suspense>
@@ -239,10 +222,10 @@ const App: React.FC = () => {
           </div>
           <div className="hidden lg:flex items-center gap-2">
             {[
-              { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+              { id: 'dashboard', label: 'Portfolio', icon: LayoutDashboard },
               { id: 'swap', label: 'Swap', icon: Repeat },
-              { id: 'pools', label: 'Yield', icon: TrendingUp },
-              { id: 'security', label: 'Sentinel', icon: ShieldCheck },
+              { id: 'pools', label: 'Staking', icon: TrendingUp },
+              { id: 'security', label: 'Auditor', icon: ShieldCheck },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -255,10 +238,13 @@ const App: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex bg-slate-900/50 border border-slate-800 rounded-2xl px-4 py-2 items-center gap-3 font-mono text-[10px]">
-             <span className="text-slate-400">{walletInfo?.address ? `${walletInfo.address.slice(0, 6)}...${walletInfo.address.slice(-4)}` : currentUser.email}</span>
-             {walletInfo && <span className="text-cyan-500 uppercase font-black">{walletInfo.chain}</span>}
-          </div>
+          {walletInfo && (
+            <div className="hidden md:flex bg-slate-900 border border-slate-800 rounded-2xl px-4 py-2 items-center gap-3 font-mono text-[10px]">
+               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+               <span className="text-slate-400">{walletInfo.address.slice(0, 6)}...{walletInfo.address.slice(-4)}</span>
+               <span className="text-cyan-500 uppercase font-black">{walletInfo.chain}</span>
+            </div>
+          )}
           <button onClick={() => setActiveTab('settings')} className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400"><Menu size={20} /></button>
         </div>
       </nav>
@@ -267,8 +253,8 @@ const App: React.FC = () => {
       </main>
       <div className="fixed bottom-8 left-8 flex gap-2 z-[60]">
          {[
-           { id: 'infrastructure', icon: Plug, label: 'API STACK' },
-           { id: 'database', icon: Terminal, label: 'SQL' },
+           { id: 'infrastructure', icon: Plug, label: 'STACK' },
+           { id: 'database', icon: Terminal, label: 'DB' },
            { id: 'env', icon: FileCode, label: 'ENV' }
          ].map((tool) => (
            <button
