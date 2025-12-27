@@ -70,15 +70,15 @@ const MemeFactory: React.FC = () => {
               <Terminal size={14} className="text-cyan-500" /> Factory Logs
             </h3>
             <div className="bg-slate-950 rounded-2xl p-6 font-mono text-[10px] text-slate-500 space-y-2 h-48 overflow-y-auto custom-scrollbar">
-               <p className="">> Initializing Factory Engine...</p>
-               <p className="">> Checking Global RPC Connectivity... <span className="text-emerald-500">OK</span></p>
-               {tokenName && <p className="text-white">> Name set: {tokenName}</p>}
-               {symbol && <p className="text-white">> Symbol set: {symbol}</p>}
-               {loading && <p className="animate-pulse">> Compiling GarrettMemeToken.sol...</p>}
+               <p className="">&gt; Initializing Factory Engine...</p>
+               <p className="">&gt; Checking Global RPC Connectivity... <span className="text-emerald-500">OK</span></p>
+               {tokenName && <p className="text-white">&gt; Name set: {tokenName}</p>}
+               {symbol && <p className="text-white">&gt; Symbol set: {symbol}</p>}
+               {loading && <p className="animate-pulse">&gt; Compiling GarrettMemeToken.sol...</p>}
                {deployedAddress && (
                  <div className="animate-in slide-in-from-left duration-300">
-                   <p className="text-emerald-500">> Contract Deployed!</p>
-                   <p className="text-cyan-500">> Address: {deployedAddress}</p>
+                   <p className="text-emerald-500">&gt; Contract Deployed!</p>
+                   <p className="text-cyan-500">&gt; Address: {deployedAddress}</p>
                  </div>
                )}
             </div>
